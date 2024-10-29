@@ -1822,7 +1822,7 @@ class FastLlamaModel:
         internal_model = model
         while hasattr(internal_model, "model"):
             if hasattr(internal_model, "config"):
-                if   internal_model.config.torch_dtype ==  "float32":
+                if internal_model.config.torch_dtype ==  "float32":
                     internal_model.config.torch_dtype = torch.float32
                 elif internal_model.config.torch_dtype == "bfloat16":
                     internal_model.config.torch_dtype = torch.bfloat16
@@ -1833,7 +1833,7 @@ class FastLlamaModel:
             internal_model = internal_model.model
         pass
         if hasattr(internal_model, "config"):
-            if   internal_model.config.torch_dtype ==  "float32":
+            if internal_model.config.torch_dtype ==  "float32":
                 internal_model.config.torch_dtype = torch.float32
             elif internal_model.config.torch_dtype == "bfloat16":
                 internal_model.config.torch_dtype = torch.bfloat16
