@@ -2497,9 +2497,7 @@ class FastLlamaModel:
             internal_model = internal_model.model
         pass
         lm_head = internal_model.lm_head.weight
-        # device_type = lm_head.device.type
-        # the type will just be "cuda" which will often move things to cuda:0, we want to use the specific device
-        device_type = lm_head.device
+        device_type = lm_head.device.type # note: this type will just be "cuda" which can lead to other gpu usage
         dtype = model.config.torch_dtype
         
         if type(dtype) is str:

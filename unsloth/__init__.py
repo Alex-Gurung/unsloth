@@ -50,6 +50,7 @@ if "CUDA_VISIBLE_DEVICES" not in os.environ:
 
 def change_unsloth_process_cuda_variable(cuda_device):
     os.environ["UNSLOTH_PROCESS_CUDA_DEVICE"] = cuda_device
+    torch.cuda.set_device(int(cuda_device[-1]))
 
 change_unsloth_process_cuda_variable('cuda:0') # by default set to cuda:0, but should change as soon as you can in your process
 warnings.warn(f"Unsloth: is currently setting UNSLOTH_PROCESS_CUDA_DEVICE to cuda:0 by default (use change_unsloth_process_cuda_variable to change GPU).")
