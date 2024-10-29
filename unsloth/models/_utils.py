@@ -1230,7 +1230,11 @@ def patch_gradient_accumulation_fix(Trainer):
     # Also fix up loss scaling ie negate loss *= self.args.gradient_accumulation_steps
     if "num_items_in_batch" not in inspect.signature(Trainer.training_step).parameters: return
 
-    function = inspect.getsource(Trainer.training_step)
+    try:
+        function = inspect.getsource(Trainer.training_step)
+    except:
+        # this function may fail when importing multiple models (and thus running this patch multiple times), just return
+        return
     where = function.find("def")
     function = function.split("\n")
     function = "\n".join(x[where:] for x in function)
