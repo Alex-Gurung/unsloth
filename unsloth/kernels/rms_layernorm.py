@@ -54,14 +54,14 @@ def _rms_layernorm_forward(
 pass
 
 
-@triton.heuristics({"GEMMA": lambda args: args["GEMMA"],})
+@triton.heuristics({"GEMMA": lambda args: bool(args["GEMMA"]),})
 @triton.jit
 def _rms_layernorm_backward(
     dY, dY_row_stride,
     X,   X_row_stride,
     W,   W_row_stride,
     r,   r_row_stride,
-    dW, dW_row_stride,
+    # dW, dW_row_stride,
     n_cols, eps,
     GEMMA      : tl.constexpr,
     BLOCK_SIZE : tl.constexpr,
@@ -131,11 +131,15 @@ pass
 
 class Fast_RMS_Layernorm(torch.autograd.Function):
     @staticmethod
-    def forward(ctx, X, W, eps, gemma = False):
+    def forward(ctx, X : torch.Tensor, W : torch.Tensor, eps : float, gemma : bool = False):
         shape = X.shape
-        dim = shape[-1]
+        dim : int = shape[-1]
         X = X.view(-1, dim)
+        n_rows : int
+        n_cols : int
         n_rows, n_cols = X.shape
+        BLOCK_SIZE : int
+        num_warps  : int
         BLOCK_SIZE, num_warps = calculate_settings(n_cols)
 
         Y = torch.empty((n_rows, n_cols), dtype = X.dtype, device = os.environ["UNSLOTH_PROCESS_CUDA_DEVICE"])
@@ -160,20 +164,22 @@ class Fast_RMS_Layernorm(torch.autograd.Function):
     pass
 
     @staticmethod
-    def backward(ctx, dY):
+    def backward(ctx, dY : torch.Tensor):
         shape = dY.shape
-        dim = shape[-1]
+        dim : int = shape[-1]
         dY = dY.view(-1, dim)
         X, W, r = ctx.saved_tensors
+        n_rows : int
+        n_cols : int
         n_rows, n_cols = dY.shape
-        dW = X
+        # dW = X
 
         _rms_layernorm_backward[(n_rows,)](
             dY, dY.stride(0),
             X,  X .stride(0),
             W,  W .stride(0),
             r,  r .stride(0),
-            dW, dW.stride(0),
+            # dW, dW.stride(0),
             n_cols, ctx.eps,
             GEMMA      = ctx.GEMMA,
             BLOCK_SIZE = ctx.BLOCK_SIZE,
@@ -185,9 +191,11 @@ class Fast_RMS_Layernorm(torch.autograd.Function):
 pass
 
 
-def fast_rms_layernorm(layernorm, X, gemma = False):
-    W   = layernorm.weight
-    eps = layernorm.variance_epsilon if \
+# [TODO] Unsure why RMS Layernorm is not torch.compiling properly
+@torch.compiler.disable
+def fast_rms_layernorm(layernorm, X : torch.Tensor, gemma : bool = False):
+    W : torch.Tensor = layernorm.weight
+    eps : float = layernorm.variance_epsilon if \
         hasattr(layernorm, "variance_epsilon") \
         else layernorm.eps
     out = Fast_RMS_Layernorm.apply(X, W, eps, gemma)
