@@ -35,6 +35,8 @@ except:
 # enabling it will require much more work, so we have to prioritize. Please understand!
 # We do have a beta version, which you can contact us about!
 # Thank you for your understanding and we appreciate it immensely!
+# Fixes https://github.com/unslothai/unsloth/issues/1266
+os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
 if "CUDA_VISIBLE_DEVICES" not in os.environ:
     num_devices = torch.cuda.device_count()
     devices_str = ",".join([str(i) for i in range(num_devices)])
@@ -172,3 +174,6 @@ from .save import *
 from .chat_templates import *
 from .tokenizer_utils import *
 from .trainer import *
+
+# Patch TRL trainers for backwards compatibility
+_patch_trl_trainer()

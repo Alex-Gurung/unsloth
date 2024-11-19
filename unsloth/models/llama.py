@@ -1389,6 +1389,15 @@ def _wrap_fast_inference(generate, device_type, dtype, model):
     @torch.inference_mode
     def _fast_generate(*args, **kwargs):
 
+        if hasattr(model, "config") and hasattr(model.config, "max_position_embeddings"):
+            if "input_ids" in kwargs and kwargs["input_ids"] is not None and "max_new_tokens" in kwargs:
+                if kwargs["input_ids"].shape[-1] + kwargs["max_new_tokens"] > model.config.max_position_embeddings:
+                    raise ValueError(
+                        f'Unsloth: input length {kwargs["input_ids"].shape[-1]} + max_new_tokens {kwargs["max_new_tokens"]} exceeds the maximum sequence length of {model.config.max_position_embeddings}!\n'\
+                        'You will need to do long context extension by increasing the `max_seq_length` in `FastLanguageModel.from_pretrained`.'
+                    )
+        pass
+
         # Set a flag for generation!
         internal_model = model
         while hasattr(internal_model, "model"):
@@ -2329,7 +2338,8 @@ class FastLlamaModel:
                     layer.self_attn.apply_qkv = apply_lora_qkv
                     n_qkv += 1
                 else:
-                    if model_type != "qwen2":
+                    if model_type == "qwen2": n_qkv += 1
+                    else:
                         logger.warning_once(
                             "Not an error, but Unsloth cannot patch Attention layers with our manual autograd engine since either LoRA adapters\n"\
                             "are not enabled or a bias term (like in Qwen) is used."
