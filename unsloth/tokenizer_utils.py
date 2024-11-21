@@ -967,8 +967,9 @@ def patch_sft_trainer_tokenizer():
         "except:\n"\
         "    if not torch.cuda.is_available():\n"\
         "        raise RuntimeError('Unsloth: We do not support AMD / Intel machines yet - it is a work in progress!')\n"\
-        "if ((a - PRE_CHECK) >= 1).sum() > 1:\n"\
-        "    raise RuntimeError('Unsloth currently does not support multi GPU setups - but we are working on it!')\n"\
+        # remove check for multi-GPUs, this fork aims to support them
+        # "if ((a - PRE_CHECK) >= 1).sum() > 1:\n"\
+        # "    raise RuntimeError('Unsloth currently does not support multi GPU setups - but we are working on it!')\n"\
         "for _ in range(3):\n"\
         "    gc.collect()\n"\
         "    torch.cuda.empty_cache()\n"\

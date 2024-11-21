@@ -1658,15 +1658,16 @@ class FastLlamaModel:
 
         # Patch Trainer
         from transformers.trainer import Trainer
-        try:
-            if Trainer._inner_training_loop.__name__ != "_fast_inner_training_loop":
-                inner_training_loop = inspect.getsource(Trainer._inner_training_loop)
-                Trainer._original_training_loop = inner_training_loop
-            else:
-                inner_training_loop = Trainer._original_training_loop
-        except:
-            raise RuntimeError('Unsloth currently does not support multi GPU setups - but we are working on it!')
-        pass
+        # try:
+        # removing check for multi-GPUs, this fork aims to support them
+        if Trainer._inner_training_loop.__name__ != "_fast_inner_training_loop":
+            inner_training_loop = inspect.getsource(Trainer._inner_training_loop)
+            Trainer._original_training_loop = inner_training_loop
+        else:
+            inner_training_loop = Trainer._original_training_loop
+        # except:
+            # raise RuntimeError('Unsloth currently does not support multi GPU setups - but we are working on it!')
+        # pass
 
         # REMOVING CHECK FOR MULTI-GPU, WE IN THEORY ARE ONLY USING ONE GPU AT A TIME
         # if ((post_check - pre_check) >= 1).sum() > 1:
@@ -1704,11 +1705,13 @@ class FastLlamaModel:
         except:
             if not torch.cuda.is_available():
                 raise RuntimeError('Unsloth: We do not support AMD / Intel machines yet - it is a work in progress!')
-        if ((a - PRE_CHECK) >= 1).sum() > 1:
-            raise RuntimeError('Unsloth currently does not support multi GPU setups - but we are working on it!')
         for _ in range(3):
             gc.collect()
             torch.cuda.empty_cache()"""
+        # we removed the check for multi-GPUs, this fork aims to support them
+        # below was the original check
+        #     if ((a - PRE_CHECK) >= 1).sum() > 1:
+        # raise RuntimeError('Unsloth currently does not support multi GPU setups - but we are working on it!')
 
         debug_info = debug_info.split('\n')
         debug_info = "\n".join([debug_info[0]] + [spaces + x[8:] for x in debug_info[1:]])
@@ -1765,8 +1768,9 @@ class FastLlamaModel:
             "is_torch_tpu_available()",
             "False",
         )
-        if "n_total_devices >" not in inner_training_loop:
-            raise RuntimeError('Unsloth currently does not support multi GPU setups - but we are working on it!')
+        # removing check for multi-GPUs, this fork aims to support them
+        # if "n_total_devices >" not in inner_training_loop:
+        #     raise RuntimeError('Unsloth currently does not support multi GPU setups - but we are working on it!')
         pass
         inner_training_loop = inner_training_loop.replace(
             "is_sagemaker_mp_enabled()",
@@ -2251,14 +2255,15 @@ class FastLlamaModel:
         pass
 
         from transformers.trainer import Trainer 
-        if Trainer._inner_training_loop.__name__ != "_fast_inner_training_loop":
-            raise RuntimeError(
-                'Unsloth currently does not work on multi GPU setups - sadly we are a 2 brother team so '\
-                'enabling it will require much more work, so we have to prioritize. Please understand!\n'\
-                'We do have a separate beta version, which you can contact us about!\n'\
-                'Thank you for your understanding and we appreciate it immensely!'
-            )
-        pass
+        # removing check for multi-GPUs, this fork aims to support them
+        # if Trainer._inner_training_loop.__name__ != "_fast_inner_training_loop":
+        #     raise RuntimeError(
+        #         'Unsloth currently does not work on multi GPU setups - sadly we are a 2 brother team so '\
+        #         'enabling it will require much more work, so we have to prioritize. Please understand!\n'\
+        #         'We do have a separate beta version, which you can contact us about!\n'\
+        #         'Thank you for your understanding and we appreciate it immensely!'
+        #     )
+        # pass
 
         # Fix loftq issues
         # loftq_config must not = None, but rather {}
