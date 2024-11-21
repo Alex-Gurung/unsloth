@@ -111,7 +111,8 @@ class LoRA_MLP(torch.autograd.Function):
         DW = matmul_lora(dY, downW.t(), downW_quant, downB, downA, downS)
         DW, e, g = _backward_function(DW, e, g)
         h, df, de = DW, e, g
-
+        print(h.dtype, dY.dtype, downB.dtype, downA.dtype, downS.dtype)
+        h = h.to(dY.dtype)
         # Down projection LoRA weights
         d_downA = h.t() @ (dY @ downB.t())
         d_downB = (downA.t() @ h.t()) @ dY
