@@ -53,7 +53,7 @@ warnings.warn(f"Unsloth: is currently setting UNSLOTH_PROCESS_CUDA_DEVICE to cud
 pass
 
 # Reduce VRAM usage by reducing fragmentation
-os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True,roundup_power2_divisions:[64:128,256:64,>:32]"
 
 # Hugging Face Hub faster downloads
 if "HF_HUB_ENABLE_HF_TRANSFER" not in os.environ:
