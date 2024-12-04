@@ -22,9 +22,9 @@ from transformers import (
 )
 from .llama import *
 from ..kernels import (
-    post_patch_loss_function, get_device_properties
+    post_patch_loss_function
 )
-from ._utils import __version__
+from ._utils import __version__, get_device_properties
 from peft import LoraConfig, TaskType, get_peft_model
 from transformers import set_seed as transformers_set_seed
 from unsloth_zoo.peft_utils import (
