@@ -1705,7 +1705,7 @@ class FastLlamaModel:
         
         model = AutoModelForCausalLM.from_pretrained(
             model_name,
-            device_map              = device_map if device == 'cuda:0' else device, # default back to whatever device_map is if we haven't set device
+            # device_map              = device_map if device == 'cuda:0' else device, # default back to whatever device_map is if we haven't set device
             torch_dtype             = dtype,
             # quantization_config     = bnb_config,
             token                   = token,
