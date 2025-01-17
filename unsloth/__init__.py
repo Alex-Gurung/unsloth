@@ -16,6 +16,7 @@ import warnings, importlib, sys
 from packaging.version import Version
 import os, re, subprocess, inspect
 import numpy as np
+import torch
 
 # # Define a list of modules to check
 # MODULES_TO_CHECK = ["bitsandbytes"]
