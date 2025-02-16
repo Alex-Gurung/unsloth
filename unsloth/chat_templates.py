@@ -1946,11 +1946,11 @@ def create_stopping_criteria(tokenizer, stop_word = "eos_token"):
         def __init__(self, stops = "eos_token", device = "cuda", encounters = 1):
             super().__init__()
             if stops == "eos_token":
-                self.stop_token = torch.tensor(tokenizer.eos_token_id, device = "cuda")
+                self.stop_token = torch.tensor(tokenizer.eos_token_id, device = torch.cuda.current_device())
                 self.length = 1
             else:
                 self.stop_token = tokenizer(["\n" + stops], add_special_tokens = False, return_tensors = "pt")
-                self.stop_token = self.stop_token.input_ids.ravel()[1:].to("cuda")
+                self.stop_token = self.stop_token.input_ids.ravel()[1:].to(torch.cuda.current_device())
                 self.length = self.stop_token.shape[0]
             pass
             self.single_match = self.length == 1

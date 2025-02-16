@@ -149,8 +149,8 @@ class Fast_RMS_Layernorm(torch.autograd.Function):
         num_warps  : int
         BLOCK_SIZE, num_warps = calculate_settings(n_cols)
 
-        Y = torch.empty((n_rows, n_cols), dtype = X.dtype, device = "cuda:0")
-        r = torch.empty(n_rows, dtype = torch.float32, device = "cuda:0")
+        Y = torch.empty((n_rows, n_cols), dtype = X.dtype, device = torch.cuda.current_device())
+        r = torch.empty(n_rows, dtype = torch.float32, device = torch.cuda.current_device())
 
         fx = _gemma_rms_layernorm_forward if gemma else _rms_layernorm_forward
         fx[(n_rows,)](
@@ -180,7 +180,7 @@ class Fast_RMS_Layernorm(torch.autograd.Function):
         n_cols : int
         n_rows, n_cols = dY.shape
         # dW = X
-        dX = torch.empty_like(dY, device = "cuda:0") if ctx.GEMMA else dY
+        dX = torch.empty_like(dY, device = torch.cuda.current_device()) if ctx.GEMMA else dY
 
         _rms_layernorm_backward[(n_rows,)](
             dY, dY.stride(0),
@@ -260,16 +260,16 @@ def test_rms_layernorm(
     bsz = 21, random_state = 3407, seqlen = 3341,
 ):
     from transformers.models.llama.modeling_llama import LlamaRMSNorm
-    layernorm = LlamaRMSNorm((dim,), eps = eps).to("cuda")
+    layernorm = LlamaRMSNorm((dim,), eps = eps).to(torch.cuda.current_device())
     torch.cuda.manual_seed(random_state)
     torch.manual_seed(random_state)
     torch.nn.init.uniform_(layernorm.weight)
-    X = torch.randn((bsz, seqlen, dim), dtype = dtype, device = "cuda")
+    X = torch.randn((bsz, seqlen, dim), dtype = dtype, device = torch.cuda.current_device())
     XX = X.clone()
     X .requires_grad_(True)
     XX.requires_grad_(True)
     Y = layernorm(X)
-    YY = torch.randn((bsz, seqlen, dim), dtype = dtype, device = "cuda", requires_grad = True)
+    YY = torch.randn((bsz, seqlen, dim), dtype = dtype, device = torch.cuda.current_device(), requires_grad = True)
     Y.backward(YY)
     correct_grad = X.grad.clone()
     # from unsloth.kernels import fast_rms_layernorm
@@ -282,7 +282,7 @@ pass
 def testing_suite_layernorm():
     for dim in [512, 1024, 2048]:
         for dtype in [torch.float16, torch.bfloat16]:
-            with torch.autocast(device_type = "cuda", dtype = dtype):
+            with torch.autocast(device_type = torch.cuda.current_device(), dtype = dtype):
                 for seqlen in [3341, 2048, 349]:
                     for random_state in [3407, 42]:
                         test_rms_layernorm(

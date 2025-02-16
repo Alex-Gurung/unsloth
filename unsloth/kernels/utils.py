@@ -24,8 +24,8 @@ if Version(torch.__version__) < Version("2.4.0"):
     torch_amp_custom_fwd = torch.cuda.amp.custom_fwd
     torch_amp_custom_bwd = torch.cuda.amp.custom_bwd
 else:
-    torch_amp_custom_fwd = torch.amp.custom_fwd(device_type = "cuda")
-    torch_amp_custom_bwd = torch.amp.custom_bwd(device_type = "cuda")
+    torch_amp_custom_fwd = torch.amp.custom_fwd(device_type = torch.cuda.current_device())
+    torch_amp_custom_bwd = torch.amp.custom_bwd(device_type = torch.cuda.current_device())
 pass
 
 
@@ -146,7 +146,7 @@ if HAS_CUDA_STREAM:
             absmax2, code2, blocksize2, _, _, _, _ = state2
         pass
         global CUDA_STREAM
-        if CUDA_STREAM is None: CUDA_STREAM = torch.cuda.current_stream("cuda:0")
+        if CUDA_STREAM is None: CUDA_STREAM = torch.cuda.current_stream(torch.cuda.current_device())
 
         n_elements_absmax = absmax.numel()
 
@@ -158,8 +158,8 @@ if HAS_CUDA_STREAM:
             global WEIGHT_BUFFER
             global ABSMAX_BUFFER
             if WEIGHT_BUFFER is None:
-                WEIGHT_BUFFER = torch.empty(size, dtype = dtype, device = "cuda:0", requires_grad = False)
-                ABSMAX_BUFFER = torch.empty(n_elements_absmax, dtype = torch.float32, device = "cuda:0", requires_grad = False)
+                WEIGHT_BUFFER = torch.empty(size, dtype = dtype, device = torch.cuda.current_device(), requires_grad = False)
+                ABSMAX_BUFFER = torch.empty(n_elements_absmax, dtype = torch.float32, device = torch.cuda.current_device(), requires_grad = False)
 
             if size > WEIGHT_BUFFER.numel(): WEIGHT_BUFFER.resize_(size)
             if n_elements_absmax > ABSMAX_BUFFER.numel(): ABSMAX_BUFFER.resize_(n_elements_absmax)
@@ -168,11 +168,11 @@ if HAS_CUDA_STREAM:
             out_absmax = ABSMAX_BUFFER[:n_elements_absmax]
         else:
             if out is None:
-                out = torch.empty(shape, dtype = dtype, device = "cuda:0", requires_grad = False)
+                out = torch.empty(shape, dtype = dtype, device = torch.cuda.current_device(), requires_grad = False)
             else:
                 assert(out.shape == shape)
                 assert(out.dtype == dtype)
-            out_absmax = torch.empty(n_elements_absmax, dtype = torch.float32, device = "cuda:0", requires_grad = False)
+            out_absmax = torch.empty(n_elements_absmax, dtype = torch.float32, device = torch.cuda.current_device(), requires_grad = False)
         pass
 
         # NF4 dequantization of statistics
@@ -226,8 +226,8 @@ else:
             global WEIGHT_BUFFER
             global ABSMAX_BUFFER
             if WEIGHT_BUFFER is None:
-                WEIGHT_BUFFER = torch.empty(size, dtype = dtype, device = "cuda:0", requires_grad = False)
-                ABSMAX_BUFFER = torch.empty(n_elements_absmax, dtype = dtype, device = "cuda:0", requires_grad = False)
+                WEIGHT_BUFFER = torch.empty(size, dtype = dtype, device = torch.cuda.current_device(), requires_grad = False)
+                ABSMAX_BUFFER = torch.empty(n_elements_absmax, dtype = dtype, device = torch.cuda.current_device(), requires_grad = False)
 
             if size > WEIGHT_BUFFER.numel(): WEIGHT_BUFFER.resize_(size)
             if n_elements_absmax > ABSMAX_BUFFER.numel(): ABSMAX_BUFFER.resize_(n_elements_absmax)
@@ -236,11 +236,11 @@ else:
             out_absmax = ABSMAX_BUFFER[:n_elements_absmax]
         else:
             if out is None:
-                out = torch.empty(shape, dtype = dtype, device = "cuda:0", requires_grad = False)
+                out = torch.empty(shape, dtype = dtype, device = torch.cuda.current_device(), requires_grad = False)
             else:
                 assert(out.shape == shape)
                 assert(out.dtype == dtype)
-            out_absmax = torch.empty(n_elements_absmax, dtype = torch.float32, device = "cuda:0", requires_grad = False)
+            out_absmax = torch.empty(n_elements_absmax, dtype = torch.float32, device = torch.cuda.current_device(), requires_grad = False)
         pass
 
         # Do dequantization
@@ -289,13 +289,13 @@ if HAS_CUDA_STREAM:
             absmax2, code2, blocksize2, _, _, _, _ = state2
         pass
         global CUDA_STREAM
-        if CUDA_STREAM is None: CUDA_STREAM = torch.cuda.current_stream("cuda:0")
+        if CUDA_STREAM is None: CUDA_STREAM = torch.cuda.current_stream(torch.cuda.current_device())
         
         # assert(dtype == X.dtype)
         bout = shape[0]
 
         if out is None:
-            out = torch.empty((1, 1, bout,), dtype = dtype, device = "cuda:0")
+            out = torch.empty((1, 1, bout,), dtype = dtype, device = torch.cuda.current_device())
         # else:
         #     assert(out.shape == (1, 1, bout,))
         # pass
@@ -313,7 +313,7 @@ if HAS_CUDA_STREAM:
         ldb = ctypes_c_int32(ldb)
         ldc = ctypes_c_int32(ldc)
 
-        df = torch.empty(absmax.shape, dtype = torch.float32, device = "cuda:0")
+        df = torch.empty(absmax.shape, dtype = torch.float32, device = torch.cuda.current_device())
         cdequantize_blockwise_fp32(
             get_ptr(code2), get_ptr(absmax), get_ptr(absmax2), get_ptr(df),
             ctypes_c_int(blocksize2), ctypes_c_int(df.numel()), CUDA_STREAM,
@@ -359,7 +359,7 @@ else:
         bout = shape[0]
 
         if out is None:
-            out = torch.empty((1, 1, bout,), dtype = dtype, device = "cuda:0")
+            out = torch.empty((1, 1, bout,), dtype = dtype, device = torch.cuda.current_device())
         # else:
         #     assert(out.shape == (1, 1, bout,))
         # pass
@@ -377,7 +377,7 @@ else:
         ldb = ctypes_c_int32(ldb)
         ldc = ctypes_c_int32(ldc)
 
-        df = torch.empty(absmax.shape, dtype = torch.float32, device = "cuda:0")
+        df = torch.empty(absmax.shape, dtype = torch.float32, device = torch.cuda.current_device())
         cdequantize_blockwise_fp32(
             get_ptr(code2), get_ptr(absmax), get_ptr(absmax2), get_ptr(df),
             ctypes_c_int(blocksize2), ctypes_c_int(df.numel()),
